@@ -28,6 +28,10 @@ func (server *Server) serveGraph(writer http.ResponseWriter, request *http.Reque
 	}
 
 	graphID := routeTrimPrefix(request.URL.Path, urlLibraryPath+"graphs")
+	if graphID == "" {
+		server.serveResponse(writer, serverResponse{mesgMissingParameter}, http.StatusBadRequest)
+		return
+	}
 
 	switch request.Method {
 	case "DELETE":
