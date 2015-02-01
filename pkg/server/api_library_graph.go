@@ -1,13 +1,11 @@
 package server
 
 import (
-	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/facette/facette/pkg/library"
@@ -162,6 +160,23 @@ func (server *Server) serveGraphList(writer http.ResponseWriter, request *http.R
 
 		if request.FormValue("filter") != "" && !utils.FilterMatch(request.FormValue("filter"), graph.Name) {
 			continue
+		}
+
+		// If linked graph, expand the templated description field
+		if graph.Link != "" {
+			item, err := server.Library.GetItem(graph.Link, library.LibraryItemGraph)
+
+			if err != nil {
+				logger.Log(logger.LevelError, "server", "graph template not found")
+			} else {
+				graphTemplate := item.(*library.Graph)
+
+				if graph.Description, err = expandStringTemplate(
+					graphTemplate.Description,
+					graph.Attributes); err != nil {
+					logger.Log(logger.LevelError, "server", "failed to expand graph description: %s", err)
+				}
+			}
 		}
 
 		items = append(items, &ItemResponse{
