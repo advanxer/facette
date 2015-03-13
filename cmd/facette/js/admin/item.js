@@ -71,7 +71,9 @@ function adminItemHandlePaneList(itemType) {
 }
 
 function adminItemHandlePaneSave(pane, itemId, itemType, callback) {
-    var paneSection = paneMatch(itemType + '-edit').opts('pane').section,
+    var $pane = paneMatch(itemType + '-edit'),
+        paneSection = $pane.opts('pane').section,
+        paneParams = $pane.data('redirect-params'),
         skip = false;
 
     pane.find('input[name=' + itemType + '-name]').each(function () {
@@ -86,14 +88,13 @@ function adminItemHandlePaneSave(pane, itemId, itemType, callback) {
         }
     });
 
-    if (skip) {
+    if (skip)
         return;
-    }
 
     itemSave(itemId, paneSection, callback(), null)
         .then(function () {
             PANE_UNLOAD_LOCK = false;
-            window.location = urlPrefix + '/admin/' + paneSection + '/';
+            window.location = urlPrefix + '/admin/' + paneSection + '/' + (paneParams ? '?' + paneParams : '');
         })
         .fail(function () {
             overlayCreate('alert', {

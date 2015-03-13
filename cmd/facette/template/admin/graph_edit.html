@@ -20,7 +20,10 @@
 				<button class="icon icon-prev" name="step-prev">Previous</button>
 				<button class="icon icon-next" name="step-next">Next</button>
 				<button name="step-ok">OK</button>
-				<button name="step-save">Save Graph</button>
+				<button name="step-save">
+					<span class="default">Save Graph</span>
+					<span class="template">Save Template</span>
+				</button>
 			</footer>
 
 			<section data-step="1">
@@ -29,13 +32,13 @@
 
 					<fieldset>
 						<label for="origin">Origin</label>
-						<input data-input="origin" data-inputopts="sources: catalog/origins/" id="origin" name="origin" type="text">
+						<input data-input="origin" data-inputopts="sources: catalog/origins/; ignorepattern: {{ "{{" }}" id="origin" name="origin" type="text">
 
 						<label for="source">Source</label>
-						<input data-input="source" data-inputopts="sources: library/sourcegroups/, catalog/sources/" id="source" name="source" type="text">
+						<input data-input="source" data-inputopts="sources: library/sourcegroups/, catalog/sources/; ignorepattern: {{ "{{" }}" id="source" name="source" type="text">
 
 						<label for="metric">Metric</label>
-						<input data-input="metric" data-inputopts="sources: library/metricgroups/, catalog/metrics/" id="metric" name="metric" type="text">
+						<input data-input="metric" data-inputopts="sources: library/metricgroups/, catalog/metrics/; ignorepattern: {{ "{{" }}" id="metric" name="metric" type="text">
 
 						<button name="metric-add">Add</button>
 						<button name="metric-update">Update</button>
@@ -199,6 +202,18 @@
 								<div class="placeholder">Loading...</div>
 							</div>
 						</div>
+
+						<table class="list graphattrs" data-list="step-3-attrs">
+							<thead>
+								<tr><th class="name">Name</th><th class="value">Value</th></tr>
+							</thead>
+							<tbody>
+								<tr class="listitem" data-listtmpl="step-3-attrs">
+									<td class="key"><input type="text" disabled="disabled"></td>
+									<td class="value"><input type="text"></td>
+								</tr>
+							</tbody>
+						</table>
 					</div>
 				</div>
 			</section>

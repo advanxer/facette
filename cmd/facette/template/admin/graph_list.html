@@ -24,8 +24,15 @@
 			</header>
 
 			<section class="scrollarea full">
-				<div class="list" data-list="graphs" data-listopts="init: true; url: library/graphs/; messages: graph">
-					<h1>Graphs List <span class="count"></span></h1>
+				<div class="list" data-list="graphs" data-listopts="init: true; url: library/graphs/{{ if .Template }}?templates=1{{ end }}; messages: graph">
+					<h1>{{ if .Template }}Graphs Templates List{{ else }}Graphs List{{ end }} <span class="count"></span></h1>
+
+					<nav class="listmenu">
+						<ul>
+							<li{{ if not .Template }} class="current"{{ end }}><a href="{{ .URLPrefix }}/admin/graphs/">Graphs</a></li>
+							<li{{ if .Template }} class="current"{{ end }}><a href="{{ .URLPrefix }}/admin/graphs/?templates=1">Templates</a></li>
+						</ul>
+					</nav>
 
 					<div class="listmesg" data-listmesg="graphs"></div>
 

@@ -11,6 +11,23 @@ function adminGraphGetData() {
             groups: adminGraphGetGroups()
         };
 
+    // Append graph arguments if template
+    if ($pane.data('template')) {
+        $pane.find('.graphattrs [data-listitem]').each(function (index) {
+            var $item = $(this);
+
+            if (index === 0)
+                data.attributes = {};
+
+            data.attributes[$item.find('.key :input').val()] = $item.find('.value :input').val();
+        });
+
+        data.template = true;
+
+        // Set extra pane redirection parameters
+        $pane.data('redirect-params', 'templates=1');
+    }
+
     return data;
 }
 
@@ -467,6 +484,24 @@ function adminGraphGetConsolidateLabel(type) {
     }
 }
 
+function adminGraphGetTemplatable() {
+    var result = [],
+        groups = adminGraphGetGroups(),
+        series,
+        i, j;
+
+    for (i in groups) {
+        for (j in groups[i].series) {
+            series = groups[i].series[j];
+
+            result = result.concat((series.origin + '\x1e' + series.source + '\x1e' + series.metric).
+                matchAll(/\{\{\s*.([a-z0-9]+)\s*\}\}/i));
+        }
+    }
+
+    return result;
+}
+
 function adminGraphSetupTerminate() {
     // Register admin panes
     paneRegister('graph-list', function () {
@@ -480,22 +515,36 @@ function adminGraphSetupTerminate() {
         // Register completes and checks
         if ($('[data-input=source]').length > 0) {
             inputRegisterComplete('source', function (input) {
-                return inputGetSources(input, {
-                    origin: input.closest('fieldset').find('input[name=origin]').val()
-                });
+                var $origin = input.closest('fieldset').find('input[name=origin]'),
+                    params = {},
+                    opts;
+
+                opts = $origin.closest('[data-input]').opts('input');
+                if (!opts.ignorepattern || $origin.val().indexOf(opts.ignorepattern) == -1)
+                    params.origin = $origin.val();
+
+                return inputGetSources(input, params);
             });
         }
 
         if ($('[data-input=metric]').length > 0) {
             inputRegisterComplete('metric', function (input) {
                 var $fieldset = input.closest('fieldset'),
-                    source = $fieldset.find('input[name=source]');
+                    $origin = $fieldset.find('input[name=origin]'),
+                    $source = $fieldset.find('input[name=source]'),
+                    params = {},
+                    opts;
 
-                return inputGetSources(input, {
-                    origin: $fieldset.find('input[name=origin]').val(),
-                    source: (source.data('value') && source.data('value').source.endsWith('groups/') ? 'group:' : '') +
-                        source.val()
-                });
+                opts = $origin.closest('[data-input]').opts('input');
+                if (!opts.ignorepattern || $origin.val().indexOf(opts.ignorepattern) == -1)
+                    params.origin = $origin.val();
+
+                opts = $source.closest('[data-input]').opts('input');
+                if (!opts.ignorepattern || $source.val().indexOf(opts.ignorepattern) == -1)
+                    params.source = ($source.data('value') && $source.data('value').source.endsWith('groups/') ?
+                        'group:' : '') + $source.val();
+
+                return inputGetSources(input, params);
             });
         }
 
@@ -627,7 +676,11 @@ function adminGraphSetupTerminate() {
         });
 
         paneStepRegister('graph-edit', 3, function () {
-            var $step = $('[data-step=3]');
+            var $step = $('[data-step=3]'),
+                $listArgs,
+                $item,
+                attrs = [],
+                i;
 
             $pane.find('button[name=auto-name]').hide();
 
@@ -637,6 +690,23 @@ function adminGraphSetupTerminate() {
                 selectUpdate($step.find('select[name=graph-unit]').get(0));
                 $step.find(':input:first').select();
             });
+
+            // Generate graph arguments list
+            $listArgs = listMatch('step-3-attrs');
+
+            if ($pane.data('template')) {
+                $listArgs.show();
+                listEmpty($listArgs);
+
+                attrs = adminGraphGetTemplatable();
+
+                for (i in attrs) {
+                    $item = listAppend($listArgs);
+                    $item.find('.key input').val(attrs[i]);
+                }
+            } else {
+                $listArgs.hide();
+            }
         });
 
         paneStepRegister('graph-edit', 'stack', function () {
@@ -1276,6 +1346,16 @@ function adminGraphSetupTerminate() {
                     $source   = $fieldset.find('input[name=source]');
                     $origin   = $fieldset.find('input[name=origin]');
 
+                    // Set template mode
+                    if ($origin.val().indexOf('{{') != -1 || $source.val().indexOf('{{') != -1 ||
+                        $metric.val().indexOf('{{') != -1) {
+                        $pane.data('template', true);
+                        $pane.find('button[name=step-save]').children().hide().filter('.template').show();
+                    } else if (e.target.name = 'metric-update' && listGetCount($list) == 1) {
+                        $pane.data('template', false);
+                        $pane.find('button[name=step-save]').children().hide().filter('.default').show();
+                    }
+
                     if (e.target.name == 'metric-update')
                         $entryActive = listGetItems($list, '.active');
 
@@ -1463,6 +1543,26 @@ function adminGraphSetupTerminate() {
                     .val('');
             })
             .on('keyup', '[data-step=1] fieldset input', adminHandleFieldType)
+            .on('keypress', '[data-step=3] .graphattrs :input', function (e) {
+                var $target,
+                    $attrs;
+
+                if (!$pane.data('template'))
+                    return;
+
+                $target = $(e.target);
+                $attrs = $target.closest('.graphattrs');
+
+                if ($attrs.data('timeout')) {
+                    clearTimeout($attrs.data('timeout'));
+                    $attrs.removeData('timeout');
+                }
+
+                // Trigger graph redraw
+                $attrs.data('timeout', setTimeout(function () {
+                    graphDraw($target.closest('[data-step]').find('[data-graph]'), false, 0, adminGraphGetData());
+                }, 1000));
+            })
             .on('dragstart dragend dragover dragleave drop', '.dragarea', adminGraphHandleSeriesDrag);
 
         // Load graph data
@@ -1500,6 +1600,15 @@ function adminGraphSetupTerminate() {
                     if (data.groups[i].type === OPER_GROUP_TYPE_NONE && !data.groups[i].series[j].options)
                         data.groups[i].series[j].options = data.groups[i].options;
 
+
+                    if (data.groups[i].series[j].origin.indexOf('{{') != -1 ||
+                        data.groups[i].series[j].source.indexOf('{{') != -1 ||
+                        data.groups[i].series[j].metric.indexOf('{{') != -1) {
+                        $pane.data('template', true);
+                    } else {
+                        $pane.data('template', false);
+                    }
+
                     $itemSeries = adminGraphCreateSeries(null, data.groups[i].series[j])
                         .data('renamed', true);
 
@@ -1512,6 +1621,9 @@ function adminGraphSetupTerminate() {
                 if ($itemOper && stacks[data.groups[i].stack_id])
                     adminGraphCreateProxy(PROXY_TYPE_GROUP, $itemOper, stacks[data.groups[i].stack_id]);
             }
+
+            if ($pane.data('template'))
+                $pane.find('button[name=step-save]').children().hide().filter('.template').show();
 
             $pane.find('input[name=graph-name]').val(data.name);
             $pane.find('textarea[name=graph-desc]').val(data.description);
