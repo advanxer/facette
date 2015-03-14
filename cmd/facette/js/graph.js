@@ -156,7 +156,10 @@ function graphDraw(graph, postpone, delay, preview) {
 
                     graph.find('.placeholder')
                         .addClass('icon icon-warning')
-                        .text(data.message ? data.message : $.t('graph.mesg_empty_series'));
+                        .text(data.message ? data.message : $.t('graph.mesg_empty_series'))
+                        .show();
+
+                    graph.children('.graphcntr').empty();
 
                     $deferred.resolve();
 
@@ -351,7 +354,7 @@ function graphDraw(graph, postpone, delay, preview) {
                     graph.children('.graphctrl').remove();
                 } else {
                     highchartOpts.title = {
-                        text: graphOpts.title || data.name
+                        text: data.title || data.name
                     };
 
                     highchartOpts.subtitle = {

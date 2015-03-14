@@ -240,11 +240,13 @@ function inputHandleKeyComplete(e) {
                     $target
                         .data('value', entries[0])
                         .val(entries[0].name)
-                        .select()
                         .trigger({
                             type: 'change',
                             _autofill: true
                         });
+
+                    if (!e._init)
+                        $target.select();
                 }
             } else {
                 inputUpdate($input, items);

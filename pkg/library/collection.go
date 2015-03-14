@@ -42,14 +42,14 @@ func (library *Library) PrepareCollection(collection *Collection, filter string)
 	refreshInterval, _ := config.GetInt(collectionTemp.Options, "refresh_interval", false)
 
 	for _, entry := range collection.Entries {
-		// Retrieve missing title from graph name if none provided
+		// Retrieve missing title from graph if none provided
 		if title, ok := entry.Options["title"]; !ok || title == nil {
 			item, err := library.GetItem(entry.ID, LibraryItemGraph)
 			if err != nil {
 				continue
 			}
 
-			entry.Options["title"] = item.(*Graph).Name
+			entry.Options["title"] = item.(*Graph).Title
 		}
 
 		// Get global refresh interval if none provided
