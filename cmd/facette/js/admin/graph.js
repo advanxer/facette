@@ -4,6 +4,7 @@ function adminGraphGetData() {
         data = {
             name: $pane.find('input[name=graph-name]').val(),
             description: $pane.find('textarea[name=graph-desc]').val(),
+            title: $pane.find('input[name=graph-title]').val(),
             type: parseInt($pane.find('select[name=graph-type]').val(), 10),
             stack_mode: parseInt($pane.find('select[name=stack-mode]').val(), 10),
             unit_legend: $pane.find('input[name=unit-legend]').val(),
@@ -1627,6 +1628,8 @@ function adminGraphSetupTerminate() {
 
             $pane.find('input[name=graph-name]').val(data.name);
             $pane.find('textarea[name=graph-desc]').val(data.description);
+
+            $pane.find('input[name=graph-title]').val(data.title);
 
             $pane.find('select[name=graph-type]').val(data.type).trigger({
                 type: 'change',
