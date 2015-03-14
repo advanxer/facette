@@ -681,6 +681,7 @@ function adminGraphSetupTerminate() {
                 $listArgs,
                 $item,
                 attrs = [],
+                attrsData,
                 i;
 
             $pane.find('button[name=auto-name]').hide();
@@ -696,6 +697,8 @@ function adminGraphSetupTerminate() {
             $listArgs = listMatch('step-3-attrs');
 
             if ($pane.data('template')) {
+                attrsData = adminGraphGetData().attributes;
+
                 $listArgs.show();
                 listEmpty($listArgs);
 
@@ -704,6 +707,9 @@ function adminGraphSetupTerminate() {
                 for (i in attrs) {
                     $item = listAppend($listArgs);
                     $item.find('.key input').val(attrs[i]);
+
+                    if (attrsData[attrs[i]] !== undefined)
+                        $item.find('.value input').val(attrsData[attrs[i]]);
                 }
             } else {
                 $listArgs.hide();
