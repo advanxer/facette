@@ -157,6 +157,13 @@ function inputHandleKeyComplete(e) {
     if (!e.target.value)
         $target.removeData('value');
 
+    // Stop if ignore pattern found
+    inputOpts = $input.opts('input') || {};
+    if (inputOpts.ignorepattern && e.target.value.indexOf(inputOpts.ignorepattern) != -1) {
+        menuToggle($menu, false);
+        return;
+    }
+
     // Stop if value didn't change or empty
     if (!e._autofill) {
         if (e.target.value == e.target._lastValue) {
@@ -166,8 +173,6 @@ function inputHandleKeyComplete(e) {
             return;
         }
     }
-
-    inputOpts = $input.opts('input') || {}
 
     INPUT_TIMEOUTS[name] = setTimeout(function () {
         var $menu = menuMatch(name),
@@ -187,8 +192,7 @@ function inputHandleKeyComplete(e) {
         INPUT_REQUESTS[name] = [];
 
         // Prepare menu
-        if (!e._autofill && (!inputOpts.ignorepattern ||
-                inputOpts.ignorepattern && e.target.value.indexOf(inputOpts.ignorepattern) == -1)) {
+        if (!e._autofill) {
             menuSay($menu, 'Loading...');
             menuEmpty($menu);
         }
@@ -330,8 +334,7 @@ function inputUpdate(input, data) {
     var $menu,
         count,
         field,
-        name,
-        opts;
+        name;
 
     if (typeof input == 'string')
         input = inputMatch(input);
@@ -371,12 +374,7 @@ function inputUpdate(input, data) {
     menuToggle($menu, true);
 
     if ($menu.find('[data-menuitem]').length === 0) {
-        opts = input.opts('input') || {};
-
-        if (opts.ignorepattern && input.children(':input').get(0).value.indexOf(opts.ignorepattern) != -1)
-            menuToggle($menu, false);
-        else
-            menuSay($menu, $.t('main.mesg_nomatch'), 'warn');
+        menuSay($menu, $.t('main.mesg_nomatch'), 'warn');
     } else {
         field = input.children(':input').get(0);
 

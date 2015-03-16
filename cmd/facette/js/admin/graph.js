@@ -6,7 +6,7 @@ function adminGraphGetData(link) {
     link = typeof link == 'boolean' ? link : false;
 
     if (link) {
-        $pane = paneMatch('graph-link-edit'),
+        $pane = paneMatch('graph-link-edit');
 
         // Create linked graph structure
         data = {
@@ -20,7 +20,7 @@ function adminGraphGetData(link) {
             data.attributes[$item.find('.key :input').val()] = $item.find('.value :input').val();
         });
     } else {
-        $pane = paneMatch('graph-edit'),
+        $pane = paneMatch('graph-edit');
 
         // Create standard graph structure
         data = {
@@ -509,7 +509,7 @@ function adminGraphGetTemplatable(groups) {
             series = groups[i].series[j];
 
             result = result.concat((series.origin + '\x1e' + series.source + '\x1e' + series.metric).
-                matchAll(/\{\{\s*.([a-z0-9]+)\s*\}\}/i));
+                matchAll(/\{\{\s*\.([a-z0-9]+)\s*\}\}/i));
         }
     }
 
@@ -667,6 +667,9 @@ function adminGraphSetupTerminate() {
                     contentType: 'application/json',
                     data: JSON.stringify(expandQuery)
                 }).pipe(function (data) {
+                    if (!data)
+                        return;
+
                     listGetItems($listSeries).each(function (index) {
                         var $item = $(this);
 
@@ -717,26 +720,36 @@ function adminGraphSetupTerminate() {
                 $step.find(':input:first').select();
             });
 
+            // Check for template
+            $pane.find('.tmplattrs').toggle($pane.data('template'));
+
+            if (!$pane.data('template'))
+                return;
+
             // Generate graph arguments list
             $listAttrs = listMatch('step-3-attrs');
 
-            if ($pane.data('template')) {
-                attrsData = $pane.data('attrs-data') || {};
+            attrs = adminGraphGetTemplatable(adminGraphGetGroups());
 
-                $listAttrs.show();
-                listEmpty($listAttrs);
-
-                attrs = adminGraphGetTemplatable(adminGraphGetGroups());
-
-                for (i in attrs) {
-                    $item = listAppend($listAttrs);
-                    $item.find('.key input').val(attrs[i]);
-
-                    if (attrsData[attrs[i]] !== undefined)
-                        $item.find('.value input').val(attrsData[attrs[i]]);
-                }
+            if (attrs.length === 0) {
+                listSay($listAttrs, $.t('graph.mesg_no_template_attr'), 'warning');
+                $listAttrs.next('.mesgitem').hide();
+                return;
             } else {
-                $listAttrs.hide();
+                $listAttrs.next('.mesgitem').show();
+            }
+
+            listSay($listAttrs, null);
+            listEmpty($listAttrs);
+
+            attrsData = $pane.data('attrs-data') || {};
+
+            for (i in attrs) {
+                $item = listAppend($listAttrs);
+                $item.find('.key input').val(attrs[i]);
+
+                if (attrsData[attrs[i]] !== undefined)
+                    $item.find('.value input').val(attrsData[attrs[i]]);
             }
         });
 
@@ -1382,7 +1395,7 @@ function adminGraphSetupTerminate() {
                         $metric.val().indexOf('{{') != -1) {
                         $pane.data('template', true);
                         $pane.find('button[name=step-save]').children().hide().filter('.template').show();
-                    } else if (e.target.name = 'metric-update' && listGetCount($list) == 1) {
+                    } else if (e.target.name == 'metric-update' && listGetCount($list) == 1) {
                         $pane.data('template', false);
                         $pane.find('button[name=step-save]').children().hide().filter('.default').show();
                     }

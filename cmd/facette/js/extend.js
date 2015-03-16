@@ -30,18 +30,18 @@ if (!String.prototype.matchAll) {
         if (!regexp.global) {
             regexpStr = regexp.toString();
             index = regexpStr.lastIndexOf('/');
-            regexp = RegExp(regexpStr.substr(regexpStr.indexOf('/') + 1, index - 1), regexpStr.substr(index + 1) + 'g');
+            regexp = new RegExp(regexpStr.substr(regexpStr.indexOf('/') + 1, index - 1), regexpStr.substr(index + 1) + 'g');
         }
 
-        while (match = regexp.exec(this)) {
-            if (match.length == 0)
+        while ((match = regexp.exec(this))) {
+            if (match.length === 0)
                 continue;
 
             matches.push(match[1]);
         }
 
         return matches;
-    }
+    };
 }
 
 /* Extend: jQuery */
