@@ -513,7 +513,7 @@ function adminGraphGetTemplatable(groups) {
         }
     }
 
-    return result;
+    return $.unique(result);
 }
 
 function adminGraphSetupTerminate() {
