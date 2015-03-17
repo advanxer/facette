@@ -517,6 +517,7 @@ function graphHandleActions(e) {
         $overlay,
         graphObj,
         delta,
+        location,
         options,
         range;
 
@@ -526,8 +527,14 @@ function graphHandleActions(e) {
     }
 
     if (e.target.href.endsWith('#edit')) {
+        options = $graph.data('options');
+
         // Go to Administration Panel
-        window.location = urlPrefix + '/admin/graphs/' + $(e.target).closest('[data-graph]').attr('data-graph');
+        location = urlPrefix + '/admin/graphs/' + $(e.target).closest('[data-graph]').attr('data-graph');
+        if (options.linked === true)
+            location += '?linked=1';
+
+        window.location = location;
     } else if (e.target.href.endsWith('#reframe-all')) {
         // Apply current options to siblings
         $graph.siblings('[data-graph]').each(function () {
